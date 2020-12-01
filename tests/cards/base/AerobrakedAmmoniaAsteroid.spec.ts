@@ -33,6 +33,7 @@ describe('AerobrakedAmmoniaAsteroid', function() {
     player.playedCards.push(selectedCard);
 
     card.play(player, game);
+    game.deferredActions.shift()!.execute();
     expect(player.getProduction(Resources.HEAT)).to.eq(3);
     expect(player.getProduction(Resources.PLANTS)).to.eq(1);
     expect(player.getResourcesOnCard(selectedCard)).to.eq(2);
@@ -46,13 +47,13 @@ describe('AerobrakedAmmoniaAsteroid', function() {
     const otherMicrobeCard = new Decomposers();
     player.playedCards.push(selectedCard, otherMicrobeCard);
 
-    const action = card.play(player, game);
+    card.play(player, game);
     expect(player.getProduction(Resources.HEAT)).to.eq(3);
     expect(player.getProduction(Resources.PLANTS)).to.eq(1);
 
+    const action = game.deferredActions.shift()!.execute();
     expect(action).is.not.undefined;
-        action!.cb([selectedCard]);
-
-        expect(player.getResourcesOnCard(selectedCard)).to.eq(2);
+    action!.cb([selectedCard]);
+    expect(player.getResourcesOnCard(selectedCard)).to.eq(2);
   });
 });

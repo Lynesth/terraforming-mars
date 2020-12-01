@@ -1,5 +1,6 @@
 import {expect} from 'chai';
 import {BeamFromAThoriumAsteroid} from '../../../src/cards/base/BeamFromAThoriumAsteroid';
+import {Game} from '../../../src/Game';
 import {Player} from '../../../src/Player';
 import {Resources} from '../../../src/Resources';
 import {TestPlayers} from '../../TestingUtils';
@@ -17,10 +18,12 @@ describe('BeamFromAThoriumAsteroid', function() {
   });
 
   it('Should play', function() {
+    const game = new Game('foobar', [player, player], player);
+
     player.playedCards.push(card);
     expect(card.canPlay(player)).is.true;
 
-    card.play(player);
+    card.play(player, game);
     expect(player.getProduction(Resources.HEAT)).to.eq(3);
     expect(player.getProduction(Resources.ENERGY)).to.eq(3);
 

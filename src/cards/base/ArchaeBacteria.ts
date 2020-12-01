@@ -1,4 +1,4 @@
-import {IProjectCard} from '../IProjectCard';
+import {ProjectCard} from '../Card';
 import {Tags} from '../Tags';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
@@ -9,7 +9,7 @@ import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
 
-export class ArchaeBacteria implements IProjectCard {
+export class ArchaeBacteria extends ProjectCard {
   public cost = 6;
   public tags = [Tags.MICROBES];
   public name = CardName.ARCHAEBACTERIA;
@@ -17,12 +17,13 @@ export class ArchaeBacteria implements IProjectCard {
   public canPlay(player: Player, game: Game): boolean {
     return game.getTemperature() <= -18 + player.getRequirementsBonus(game) * 2;
   }
-  public play(player: Player) {
-    player.addProduction(Resources.PLANTS);
-    return undefined;
-  }
 
   public metadata: CardMetadata = {
+    play: {
+      productions: [
+        [Resources.PLANTS],
+      ],
+    },
     description: 'It must be -18 C or colder. Increase your Plant production 1 step.',
     cardNumber: '042',
     requirements: CardRequirements.builder((b) => b.temperature(-18).max()),
