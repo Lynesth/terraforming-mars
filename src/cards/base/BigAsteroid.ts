@@ -1,4 +1,4 @@
-import {IProjectCard} from '../IProjectCard';
+import {ProjectCard} from '../Card';
 import {Tags} from '../Tags';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
@@ -7,11 +7,12 @@ import {CardName} from '../../CardName';
 import {MAX_TEMPERATURE, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {RemoveAnyPlants} from '../../deferredActions/RemoveAnyPlants';
 import {CardMetadata} from '../../cards/CardMetadata';
 import {CardRenderer} from '../../cards/render/CardRenderer';
+import {GlobalParameters} from '../../GlobalParameters';
+import {Resources} from '../../Resources';
 
-export class BigAsteroid implements IProjectCard {
+export class BigAsteroid extends ProjectCard {
   public cost = 27;
   public tags = [Tags.SPACE];
   public cardType = CardType.EVENT;
@@ -29,14 +30,16 @@ export class BigAsteroid implements IProjectCard {
     return true;
   }
 
-  public play(player: Player, game: Game) {
-    game.increaseTemperature(player, 2);
-    game.defer(new RemoveAnyPlants(player, game, 4));
-    player.titanium += 4;
-    return undefined;
-  }
-
   public metadata: CardMetadata = {
+    play: {
+      globalParameters: [
+        [GlobalParameters.TEMPERATURE, 2],
+      ],
+      resources: [
+        [Resources.TITANIUM, 4],
+        [Resources.PLANTS, -4, true],
+      ],
+    },
     description: 'Raise temperature 2 steps and gain 4 titanium. Remove up to 4 Plants from any player.',
     cardNumber: '011',
     renderData: CardRenderer.builder((b) => {

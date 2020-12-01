@@ -1,16 +1,14 @@
-import {IProjectCard} from '../IProjectCard';
+import {ProjectCard} from '../Card';
 import {Tags} from '../Tags';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
-import {Game} from '../../Game';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
-import {DecreaseAnyProduction} from '../../deferredActions/DecreaseAnyProduction';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
 
-export class AsteroidMiningConsortium implements IProjectCard {
+export class AsteroidMiningConsortium extends ProjectCard {
   public cost = 13;
   public tags = [Tags.JOVIAN];
   public cardType = CardType.AUTOMATED;
@@ -19,16 +17,18 @@ export class AsteroidMiningConsortium implements IProjectCard {
   public canPlay(player: Player): boolean {
     return player.getProduction(Resources.TITANIUM) >= 1;
   }
-  public play(player: Player, game: Game) {
-    game.defer(new DecreaseAnyProduction(player, game, Resources.TITANIUM, 1));
-    player.addProduction(Resources.TITANIUM);
-    return undefined;
-  }
+
   public getVictoryPoints() {
     return 1;
   }
 
   public metadata: CardMetadata = {
+    play: {
+      productions: [
+        [Resources.TITANIUM, -1, true],
+        [Resources.TITANIUM, 1],
+      ],
+    },
     description: 'Requires that you have titanium production. Decrease any titanium production 1 step and increase your own 1 step.',
     cardNumber: '002',
     requirements: CardRequirements.builder((b) => b.production(Resources.TITANIUM)),

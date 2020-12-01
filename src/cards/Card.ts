@@ -18,17 +18,19 @@ import {OrOptions} from '../inputs/OrOptions';
 import {SelectOption} from '../inputs/SelectOption';
 import {ResourceType} from '../ResourceType';
 import {CardName} from '../CardName';
-import {CardMetadata} from './CardMetadata';
+import {CardMetadata, MetadataEffects} from './CardMetadata';
+import {GlobalParameters} from '../GlobalParameters';
 import {AddResourcesToCard} from '../deferredActions/AddResourcesToCard';
 import {DecreaseAnyProduction} from '../deferredActions/DecreaseAnyProduction';
+import {PlaceOceanTile} from '../deferredActions/PlaceOceanTile';
 import {RemoveAnyPlants} from '../deferredActions/RemoveAnyPlants';
 import {RemoveResourcesFromCard} from '../deferredActions/RemoveResourcesFromCard';
 
-export type cardActionResult = OrOptions | SelectOption | AndOptions | SelectAmount | SelectCard<ICard> | SelectCard<IProjectCard> | SelectHowToPay | SelectPlayer | SelectSpace | undefined;
+export type CardActionResult = OrOptions | SelectOption | AndOptions | SelectAmount | SelectCard<ICard> | SelectCard<IProjectCard> | SelectHowToPay | SelectPlayer | SelectSpace | undefined;
 
 export interface IActionCard {
   canAct: (player: Player, game: Game) => boolean;
-  action: (player: Player, game: Game) => cardActionResult;
+  action: (player: Player, game: Game) => CardActionResult;
 }
 
 export interface IResourceCard {
@@ -36,7 +38,7 @@ export interface IResourceCard {
   resourceCount: number;
 }
 
-export abstract class Card {
+export abstract class Card implements ICard {
   public abstract name: CardName;
   public abstract tags: Array<Tags>;
   public abstract cardType: CardType;
@@ -48,17 +50,33 @@ export abstract class Card {
   public hasRequirements?: boolean;
   public bonusResource?: Resources | undefined;
 
-  public canPlay?(player: Player, game: Game): boolean;
-
-  public play(player: Player, game: Game): PlayerInput | undefined {
-    if (this.metadata === undefined || this.metadata.play === undefined) {
-      return undefined;
+  private processEffects(player: Player, game: Game, effects: MetadataEffects): PlayerInput | CardActionResult {
+    // Global parameters
+    if (effects.globalParameters !== undefined) {
+      for (const [parameter, qty] of effects.globalParameters) {
+        const quantity = qty !== undefined ? qty : 1;
+        switch (parameter) {
+        case GlobalParameters.OCEAN:
+          for (let i = 0; i < quantity; i++) {
+            game.defer(new PlaceOceanTile(player, game));
+          }
+          break;
+        case GlobalParameters.OXYGEN:
+          game.increaseOxygenLevel(player, quantity as 2 | 1);
+          break;
+        case GlobalParameters.VENUS:
+          game.increaseVenusScaleLevel(player, quantity as 3 | 2 | 1);
+          break;
+        case GlobalParameters.TEMPERATURE:
+          game.increaseTemperature(player, quantity as 3 | 2 | 1);
+          break;
+        }
+      }
     }
-    const play = this.metadata.play;
 
     // Productions increase/decrease
-    if (play.productions !== undefined) {
-      for (const [resource, qty, anyPlayer] of play.productions) {
+    if (effects.productions !== undefined) {
+      for (const [resource, qty, anyPlayer] of effects.productions) {
         const quantity = getQuantity(player, game, qty);
         if (anyPlayer === true) {
           game.defer(new DecreaseAnyProduction(player, game, resource, -quantity));
@@ -69,8 +87,8 @@ export abstract class Card {
     }
 
     // Resources increase/decrease
-    if (play.resources !== undefined) {
-      for (const [res, qty, anyPlayer, ownCardsOnlyOrRestrictedTags, mandatory] of play.resources) {
+    if (effects.resources !== undefined) {
+      for (const [res, qty, anyPlayer, ownCardsOnlyOrRestrictedTags, mandatory] of effects.resources) {
         const quantity = getQuantity(player, game, qty);
         if (Object.values(Resources).includes(res as any)) {
           // It's a standard resource
@@ -97,9 +115,19 @@ export abstract class Card {
     return undefined;
   }
 
+  public canPlay?(player: Player, game: Game): boolean;
+
+  public play(player: Player, game: Game): PlayerInput | undefined {
+    if (this.metadata === undefined || this.metadata.play === undefined) {
+      return undefined;
+    }
+    const play = this.metadata.play;
+    return this.processEffects(player, game, play);
+  }
+
   public canAct?(player: Player, game: Game): boolean;
 
-  public action?(player: Player, game: Game): cardActionResult;
+  public action?(player: Player, game: Game): CardActionResult;
 
   public getCardDiscount?(player: Player, game: Game, card: IProjectCard): number;
 
