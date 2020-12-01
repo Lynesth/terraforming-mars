@@ -26,6 +26,8 @@ import {PlaceOceanTile} from '../deferredActions/PlaceOceanTile';
 import {RemoveAnyPlants} from '../deferredActions/RemoveAnyPlants';
 import {RemoveResourcesFromCard} from '../deferredActions/RemoveResourcesFromCard';
 
+// TODO (Lynesth): When every action cards have been modified
+// replace all `CardActionResults` by `PlayerInput | undefined`
 export type CardActionResult = OrOptions | SelectOption | AndOptions | SelectAmount | SelectCard<ICard> | SelectCard<IProjectCard> | SelectHowToPay | SelectPlayer | SelectSpace | undefined;
 
 export interface IActionCard {
@@ -38,7 +40,7 @@ export interface IResourceCard {
   resourceCount: number;
 }
 
-export abstract class Card implements ICard {
+export abstract class Card {
   public abstract name: CardName;
   public abstract tags: Array<Tags>;
   public abstract cardType: CardType;
@@ -115,7 +117,45 @@ export abstract class Card implements ICard {
     return undefined;
   }
 
-  public canPlay?(player: Player, game: Game): boolean;
+  public canPlay(player: Player, game: Game): boolean {
+    if (this.metadata === undefined) {
+      return true;
+    }
+    // const reqs = this.metadata.reqs !== undefined ? this.metadata.reqs : undefined;
+
+    if (this.metadata.play !== undefined) {
+      const play = this.metadata.play;
+      if (play.productions !== undefined) {
+        for (const [resource, qty, anyPlayer] of play.productions) {
+          const quantity = getQuantity(player, game, qty);
+          if (quantity < 0) {
+            if (anyPlayer === true) {
+              if (game.someoneHasResourceProduction(resource, -quantity) === false) {
+                return false;
+              }
+            } else if (player.getProduction(resource) < -quantity) {
+              return false;
+            }
+          }
+        }
+      }
+
+      if (play.resources !== undefined) {
+        for (const [res, qty, anyPlayer] of play.resources) {
+          const quantity = getQuantity(player, game, qty);
+          if (Object.values(Resources).includes(res as any)) {
+            // It's a standard resource
+            const resource = res as Resources;
+            if (anyPlayer !== true && player.getResource(resource) < -quantity) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+
+    return true;
+  }
 
   public play(player: Player, game: Game): PlayerInput | undefined {
     if (this.metadata === undefined || this.metadata.play === undefined) {
