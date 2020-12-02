@@ -25,8 +25,8 @@ export class BiomassCombustors extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.PLANTS, -1, true],
-        [Resources.ENERGY, 2],
+        {resource: Resources.PLANTS, quantity: -1, anyPlayer: true},
+        {resource: Resources.ENERGY, quantity: 2},
       ],
     },
     description: 'Requires 6% oxygen. Decrease any Plant production 1 step and increase your Energy production 2 steps.',

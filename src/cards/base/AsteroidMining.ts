@@ -19,7 +19,7 @@ export class AsteroidMining extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.TITANIUM, 2],
+        {resource: Resources.TITANIUM, quantity: 2},
       ],
     },
     description: 'Increase your titanium production 2 steps.',

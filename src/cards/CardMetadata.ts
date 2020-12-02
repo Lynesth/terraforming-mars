@@ -9,23 +9,48 @@ import {ResourceType} from '../ResourceType';
 import {Tags} from './Tags';
 import {GlobalParameters} from '../GlobalParameters';
 
+export interface EffectsStandardResources {
+  readonly resource: Resources,
+  readonly quantity: number | ((player?: Player, game?: Game) => number),
+  readonly anyPlayer?: boolean,
+}
+
+export interface EffectsResourceType {
+  readonly resource: ResourceType,
+  readonly quantity: number | ((player?: Player, game?: Game) => number),
+  readonly anyPlayer?: false,
+  readonly restrictedTags?: Tags,
+}
+
+export interface EffectsResourceTypeAnyPlayer {
+  readonly resource: ResourceType,
+  readonly quantity: number | ((player?: Player, game?: Game) => number),
+  readonly anyPlayer: true,
+  readonly ownCardsOnly?: boolean,
+  readonly mandatory?: boolean,
+}
+
+interface EffectsGlobalParametersOcean {
+  readonly parameter: GlobalParameters.OCEAN,
+  readonly steps: 2 | 1;
+}
+interface EffectsGlobalParametersOxygen {
+  readonly parameter: GlobalParameters.OXYGEN,
+  readonly steps: 2 | 1;
+}
+interface EffectsGlobalParametersTemperature {
+  readonly parameter: GlobalParameters.TEMPERATURE,
+  readonly steps: 3 | 2 | 1 | -2;
+}
+interface EffectsGlobalParametersVenus {
+  readonly parameter: GlobalParameters.VENUS,
+  readonly steps: 3 | 2 | 1;
+}
+
 export interface MetadataEffects {
-  productions?: ReadonlyArray<[
-    resource: Resources,
-    quantity?: number | ((player?: Player, game?: Game) => number),
-    anyPlayer?: boolean,
-  ]>,
-  resources?: ReadonlyArray<[
-    resource: Resources | ResourceType,
-    quantity?: number | ((player?: Player, game?: Game) => number),
-    anyPlayer?: boolean,
-    ownCardsOnlyOrRestrictedTags?: boolean | Tags,
-    mandatory?: boolean,
-  ]>,
-  globalParameters?: ReadonlyArray<[
-    parameter: GlobalParameters,
-    quantity?: number,
-  ]>,
+  readonly productions?: ReadonlyArray<EffectsStandardResources>,
+  readonly resources?: ReadonlyArray<EffectsStandardResources | EffectsResourceType | EffectsResourceTypeAnyPlayer>,
+  readonly globalParameters?: ReadonlyArray<EffectsGlobalParametersOcean | EffectsGlobalParametersOxygen | EffectsGlobalParametersTemperature | EffectsGlobalParametersVenus>,
 }
 
 export interface CardMetadata {

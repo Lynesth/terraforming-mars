@@ -22,8 +22,8 @@ export class BeamFromAThoriumAsteroid extends ProjectCard {
     public metadata: CardMetadata = {
       play: {
         productions: [
-          [Resources.HEAT, 3],
-          [Resources.ENERGY, 3],
+          {resource: Resources.HEAT, quantity: 3},
+          {resource: Resources.ENERGY, quantity: 3},
         ],
       },
       cardNumber: '058',

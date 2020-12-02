@@ -25,8 +25,8 @@ export class AsteroidMiningConsortium extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.TITANIUM, -1, true],
-        [Resources.TITANIUM, 1],
+        {resource: Resources.TITANIUM, quantity: -1, anyPlayer: true},
+        {resource: Resources.TITANIUM, quantity: 1},
       ],
     },
     description: 'Requires that you have titanium production. Decrease any titanium production 1 step and increase your own 1 step.',

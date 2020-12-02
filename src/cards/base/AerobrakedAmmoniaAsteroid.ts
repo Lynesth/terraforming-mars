@@ -16,11 +16,11 @@ export class AerobrakedAmmoniaAsteroid extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.HEAT, 3],
-        [Resources.PLANTS, 1],
+        {resource: Resources.HEAT, quantity: 3},
+        {resource: Resources.PLANTS, quantity: 1},
       ],
       resources: [
-        [ResourceType.MICROBE, 2],
+        {resource: ResourceType.MICROBE, quantity: 2},
       ],
     },
     description: 'Increase your heat production 3 steps and your Plant productions 1 step. Add 2 Microbes to ANOTHER card.',

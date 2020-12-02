@@ -15,7 +15,7 @@ export class AcquiredCompany extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.MEGACREDITS, 3],
+        {resource: Resources.MEGACREDITS, quantity: 3},
       ],
     },
     description: 'Increase your MC production 3 steps.',

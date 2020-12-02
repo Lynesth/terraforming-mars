@@ -18,7 +18,7 @@ import {OrOptions} from '../inputs/OrOptions';
 import {SelectOption} from '../inputs/SelectOption';
 import {ResourceType} from '../ResourceType';
 import {CardName} from '../CardName';
-import {CardMetadata, MetadataEffects} from './CardMetadata';
+import {CardMetadata, MetadataEffects, EffectsStandardResources, EffectsResourceType, EffectsResourceTypeAnyPlayer} from './CardMetadata';
 import {GlobalParameters} from '../GlobalParameters';
 import {AddResourcesToCard} from '../deferredActions/AddResourcesToCard';
 import {DecreaseAnyProduction} from '../deferredActions/DecreaseAnyProduction';
@@ -55,60 +55,50 @@ export abstract class Card {
   private processEffects(player: Player, game: Game, effects: MetadataEffects): PlayerInput | CardActionResult {
     // Global parameters
     if (effects.globalParameters !== undefined) {
-      for (const [parameter, qty] of effects.globalParameters) {
-        const quantity = qty !== undefined ? qty : 1;
-        switch (parameter) {
-        case GlobalParameters.OCEAN:
-          for (let i = 0; i < quantity; i++) {
+      for (const e of effects.globalParameters) {
+        if (e.parameter === GlobalParameters.OCEAN) {
+          for (let i = 0; i < e.steps; i++) {
             game.defer(new PlaceOceanTile(player, game));
           }
-          break;
-        case GlobalParameters.OXYGEN:
-          game.increaseOxygenLevel(player, quantity as 2 | 1);
-          break;
-        case GlobalParameters.VENUS:
-          game.increaseVenusScaleLevel(player, quantity as 3 | 2 | 1);
-          break;
-        case GlobalParameters.TEMPERATURE:
-          game.increaseTemperature(player, quantity as 3 | 2 | 1);
-          break;
+        } else if (e.parameter === GlobalParameters.OXYGEN) {
+          game.increaseOxygenLevel(player, e.steps);
+        } else if (e.parameter === GlobalParameters.TEMPERATURE) {
+          game.increaseTemperature(player, e.steps);
+        } else if (e.parameter === GlobalParameters.VENUS) {
+          game.increaseVenusScaleLevel(player, e.steps);
         }
       }
     }
 
     // Productions increase/decrease
     if (effects.productions !== undefined) {
-      for (const [resource, qty, anyPlayer] of effects.productions) {
-        const quantity = getQuantity(player, game, qty);
-        if (anyPlayer === true) {
-          game.defer(new DecreaseAnyProduction(player, game, resource, -quantity));
+      for (const e of effects.productions) {
+        const quantity = getQuantity(player, game, e.quantity);
+        if (e.anyPlayer === true) {
+          game.defer(new DecreaseAnyProduction(player, game, e.resource, -quantity));
         } else {
-          player.addProduction(resource, quantity);
+          player.addProduction(e.resource, quantity);
         }
       }
     }
 
     // Resources increase/decrease
     if (effects.resources !== undefined) {
-      for (const [res, qty, anyPlayer, ownCardsOnlyOrRestrictedTags, mandatory] of effects.resources) {
-        const quantity = getQuantity(player, game, qty);
-        if (Object.values(Resources).includes(res as any)) {
+      for (const e of effects.resources) {
+        const quantity = getQuantity(player, game, e.quantity);
+        if (isStandardResources(e)) {
           // It's a standard resource
-          const resource = res as Resources;
-          if (anyPlayer === true) {
+          if (e.anyPlayer === true) {
             game.defer(new RemoveAnyPlants(player, game, -quantity));
           } else {
-            player.setResource(resource, quantity);
+            player.setResource(e.resource, quantity);
           }
         } else {
           // It's a another type of resource
-          const resource = res as ResourceType;
-          if (anyPlayer === true) {
-            const ownCardsOnly = ownCardsOnlyOrRestrictedTags as boolean;
-            game.defer(new RemoveResourcesFromCard(player, game, resource, -quantity, ownCardsOnly, mandatory));
+          if (e.anyPlayer === true) {
+            game.defer(new RemoveResourcesFromCard(player, game, e.resource, -quantity, e.ownCardsOnly, e.mandatory));
           } else {
-            const restrictedTags = ownCardsOnlyOrRestrictedTags as Tags;
-            game.defer(new AddResourcesToCard(player, game, resource, quantity, restrictedTags));
+            game.defer(new AddResourcesToCard(player, game, e.resource, quantity, e.restrictedTags));
           }
         }
       }
@@ -124,29 +114,28 @@ export abstract class Card {
     // const reqs = this.metadata.reqs !== undefined ? this.metadata.reqs : undefined;
 
     if (this.metadata.play !== undefined) {
-      const play = this.metadata.play;
-      if (play.productions !== undefined) {
-        for (const [resource, qty, anyPlayer] of play.productions) {
-          const quantity = getQuantity(player, game, qty);
-          if (quantity < 0) {
-            if (anyPlayer === true) {
-              if (game.someoneHasResourceProduction(resource, -quantity) === false) {
+      const effects = this.metadata.play;
+      if (effects.productions !== undefined) {
+        for (const e of effects.productions) {
+          const quantity = getQuantity(player, game, e.quantity) * -1;
+          if (quantity > 0) {
+            if (e.anyPlayer === true) {
+              if (game.someoneHasResourceProduction(e.resource, quantity) === false) {
                 return false;
               }
-            } else if (player.getProduction(resource) < -quantity) {
+            } else if (player.getProduction(e.resource) < quantity) {
               return false;
             }
           }
         }
       }
 
-      if (play.resources !== undefined) {
-        for (const [res, qty, anyPlayer] of play.resources) {
-          const quantity = getQuantity(player, game, qty);
-          if (Object.values(Resources).includes(res as any)) {
+      if (effects.resources !== undefined) {
+        for (const e of effects.resources) {
+          const quantity = getQuantity(player, game, e.quantity) * -1;
+          if (isStandardResources(e)) {
             // It's a standard resource
-            const resource = res as Resources;
-            if (anyPlayer !== true && player.getResource(resource) < -quantity) {
+            if (e.anyPlayer !== true && player.getResource(e.resource) < quantity) {
               return false;
             }
           }
@@ -186,6 +175,10 @@ export abstract class Card {
 
 export abstract class ProjectCard extends Card {
   public abstract cost: number;
+}
+
+function isStandardResources(e: EffectsStandardResources | EffectsResourceType | EffectsResourceTypeAnyPlayer): e is EffectsStandardResources {
+  return Object.values(Resources).includes(e.resource as Resources);
 }
 
 function getQuantity(

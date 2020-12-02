@@ -11,13 +11,12 @@ export class BuildingIndustries extends ProjectCard {
     public tags = [Tags.STEEL];
     public cardType = CardType.AUTOMATED;
     public name = CardName.BUILDING_INDUSTRIES;
-    public hasRequirements = false;
 
     public metadata: CardMetadata = {
       play: {
         productions: [
-          [Resources.ENERGY, -1],
-          [Resources.STEEL, 2],
+          {resource: Resources.ENERGY, quantity: -1},
+          {resource: Resources.STEEL, quantity: 2},
         ],
       },
       cardNumber: '065',

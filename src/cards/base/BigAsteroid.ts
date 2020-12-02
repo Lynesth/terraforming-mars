@@ -33,11 +33,11 @@ export class BigAsteroid extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       globalParameters: [
-        [GlobalParameters.TEMPERATURE, 2],
+        {parameter: GlobalParameters.TEMPERATURE, steps: 2},
       ],
       resources: [
-        [Resources.TITANIUM, 4],
-        [Resources.PLANTS, -4, true],
+        {resource: Resources.TITANIUM, quantity: 4},
+        {resource: Resources.PLANTS, quantity: -4, anyPlayer: true},
       ],
     },
     description: 'Raise temperature 2 steps and gain 4 titanium. Remove up to 4 Plants from any player.',

@@ -21,7 +21,7 @@ export class ArchaeBacteria extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.PLANTS],
+        {resource: Resources.PLANTS, quantity: 1},
       ],
     },
     description: 'It must be -18 C or colder. Increase your Plant production 1 step.',

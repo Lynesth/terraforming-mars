@@ -15,7 +15,7 @@ export class AdaptedLichen extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.PLANTS],
+        {resource: Resources.PLANTS, quantity: 1},
       ],
     },
     description: 'Increase your Plant production 1 step.',

@@ -21,10 +21,10 @@ export class Algae extends ProjectCard {
   public metadata: CardMetadata = {
     play: {
       productions: [
-        [Resources.PLANTS, 2],
+        {resource: Resources.PLANTS, quantity: 2},
       ],
       resources: [
-        [Resources.PLANTS],
+        {resource: Resources.PLANTS, quantity: 1},
       ],
     },
     description: 'Requires 5 ocean tiles. Gain 1 Plant and increase your Plant production 2 steps.',
