@@ -9,22 +9,24 @@ import {ResourceType} from '../ResourceType';
 import {Tags} from './Tags';
 import {GlobalParameters} from '../GlobalParameters';
 
+export type EffectQuantityFunction = (() => number) | ((player: Player) => number) | ((player: Player, game: Game) => number);
+
 export interface EffectsStandardResources {
   readonly resource: Resources,
-  readonly quantity: number | ((player?: Player, game?: Game) => number),
+  readonly quantity: number | EffectQuantityFunction,
   readonly anyPlayer?: boolean,
 }
 
 export interface EffectsResourceType {
   readonly resource: ResourceType,
-  readonly quantity: number | ((player?: Player, game?: Game) => number),
+  readonly quantity: number | EffectQuantityFunction,
   readonly anyPlayer?: false,
   readonly restrictedTags?: Tags,
 }
 
 export interface EffectsResourceTypeAnyPlayer {
   readonly resource: ResourceType,
-  readonly quantity: number | ((player?: Player, game?: Game) => number),
+  readonly quantity: number | EffectQuantityFunction,
   readonly anyPlayer: true,
   readonly ownCardsOnly?: boolean,
   readonly mandatory?: boolean,

@@ -18,7 +18,7 @@ import {OrOptions} from '../inputs/OrOptions';
 import {SelectOption} from '../inputs/SelectOption';
 import {ResourceType} from '../ResourceType';
 import {CardName} from '../CardName';
-import {CardMetadata, MetadataEffects, EffectsStandardResources, EffectsResourceType, EffectsResourceTypeAnyPlayer} from './CardMetadata';
+import {CardMetadata, MetadataEffects, EffectsStandardResources, EffectsResourceType, EffectsResourceTypeAnyPlayer, EffectQuantityFunction} from './CardMetadata';
 import {GlobalParameters} from '../GlobalParameters';
 import {AddResourcesToCard} from '../deferredActions/AddResourcesToCard';
 import {DecreaseAnyProduction} from '../deferredActions/DecreaseAnyProduction';
@@ -184,13 +184,11 @@ function isStandardResources(e: EffectsStandardResources | EffectsResourceType |
 function getQuantity(
   player: Player,
   game: Game,
-  qty: number | ((player?: Player, game?: Game) => number) | undefined,
+  quantity: number | EffectQuantityFunction,
 ): number {
-  if (qty === undefined) {
-    return 1;
-  } else if (typeof qty === 'number') {
-    return qty;
+  if (typeof quantity === 'number') {
+    return quantity;
   } else {
-    return qty(player, game);
+    return quantity(player, game);
   }
 }
