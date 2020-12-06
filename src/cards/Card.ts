@@ -19,40 +19,44 @@ import {SelectOption} from '../inputs/SelectOption';
 import {ResourceType} from '../ResourceType';
 import {CardName} from '../CardName';
 import {CardMetadata, MetadataEffects, EffectsStandardResources, EffectsResourceType, EffectsResourceTypeAnyPlayer, EffectQuantityFunction} from './CardMetadata';
+import {checkRequirements} from './MetadataRequirements';
 import {GlobalParameters} from '../GlobalParameters';
 import {AddResourcesToCard} from '../deferredActions/AddResourcesToCard';
 import {DecreaseAnyProduction} from '../deferredActions/DecreaseAnyProduction';
+import {DrawCards} from '../deferredActions/DrawCards';
 import {PlaceOceanTile} from '../deferredActions/PlaceOceanTile';
 import {RemoveAnyPlants} from '../deferredActions/RemoveAnyPlants';
 import {RemoveResourcesFromCard} from '../deferredActions/RemoveResourcesFromCard';
 
 // TODO (Lynesth): When every action cards have been modified
-// replace all `CardActionResults` by `PlayerInput | undefined`
+// replace all `CardActionResult` by `PlayerInput | undefined`
 export type CardActionResult = OrOptions | SelectOption | AndOptions | SelectAmount | SelectCard<ICard> | SelectCard<IProjectCard> | SelectHowToPay | SelectPlayer | SelectSpace | undefined;
-
-export interface IActionCard {
-  canAct: (player: Player, game: Game) => boolean;
-  action: (player: Player, game: Game) => CardActionResult;
-}
-
-export interface IResourceCard {
-  resourceType: ResourceType;
-  resourceCount: number;
-}
 
 export abstract class Card {
   public abstract name: CardName;
   public abstract tags: Array<Tags>;
   public abstract cardType: CardType;
+  public abstract metadata: CardMetadata;
 
   public cost?: number;
-  public metadata?: CardMetadata;
   public resourceType?: ResourceType;
   public resourceCount?: number;
   public hasRequirements?: boolean;
   public bonusResource?: Resources | undefined;
 
-  private processEffects(player: Player, game: Game, effects: MetadataEffects): PlayerInput | CardActionResult {
+  protected processEffects(player: Player, game: Game, effects: MetadataEffects): PlayerInput | CardActionResult {
+    // Draw cards
+    if (effects.cardDraw !== undefined) {
+      const quantity = getQuantity(player, game, effects.cardDraw.quantity);
+      game.defer(new DrawCards(player, game, quantity, effects.cardDraw.specificTag));
+    }
+
+    // TR increase
+    if (effects.tr !== undefined) {
+      const quantity = getQuantity(player, game, effects.tr.quantity);
+      player.increaseTerraformRatingSteps(quantity, game);
+    }
+
     // Global parameters
     if (effects.globalParameters !== undefined) {
       for (const e of effects.globalParameters) {
@@ -108,10 +112,11 @@ export abstract class Card {
   }
 
   public canPlay(player: Player, game: Game): boolean {
-    if (this.metadata === undefined) {
-      return true;
+    if (this.metadata.reqs !== undefined) {
+      if (checkRequirements(player, game, this.metadata.reqs) === false) {
+        return false;
+      }
     }
-    // const reqs = this.metadata.reqs !== undefined ? this.metadata.reqs : undefined;
 
     if (this.metadata.play !== undefined) {
       const effects = this.metadata.play;
@@ -147,22 +152,25 @@ export abstract class Card {
   }
 
   public play(player: Player, game: Game): PlayerInput | undefined {
-    if (this.metadata === undefined || this.metadata.play === undefined) {
+    if (this.metadata.play === undefined) {
       return undefined;
     }
-    const play = this.metadata.play;
-    return this.processEffects(player, game, play);
+    return this.processEffects(player, game, this.metadata.play);
   }
 
   public canAct?(player: Player, game: Game): boolean;
-
   public action?(player: Player, game: Game): CardActionResult;
 
   public getCardDiscount?(player: Player, game: Game, card: IProjectCard): number;
 
   public getRequirementBonus?(player: Player, game: Game, venusOnly?: boolean): number;
 
-  public getVictoryPoints?(player: Player, game: Game): number;
+  public getVictoryPoints(player: Player, game: Game): number {
+    if (this.metadata.vps === undefined) {
+      return 0;
+    }
+    return getQuantity(player, game, this.metadata.vps);
+  }
 
   public onCardPlayed?(player: Player, game: Game, card: IProjectCard): OrOptions | void;
 
@@ -175,6 +183,25 @@ export abstract class Card {
 
 export abstract class ProjectCard extends Card {
   public abstract cost: number;
+}
+
+export abstract class ActionCard extends ProjectCard {
+  public cardType = CardType.ACTIVE;
+  public canAct(_player: Player, _game: Game): boolean {
+    return true;
+  }
+
+  public action(player: Player, game: Game): CardActionResult | undefined {
+    if (this.metadata === undefined || this.metadata.action === undefined || this.metadata.action.effects === undefined) {
+      return undefined;
+    }
+    return this.processEffects(player, game, this.metadata.action.effects);
+  }
+}
+
+export interface IResourceCard {
+  resourceType: ResourceType;
+  resourceCount: number;
 }
 
 function isStandardResources(e: EffectsStandardResources | EffectsResourceType | EffectsResourceTypeAnyPlayer): e is EffectsStandardResources {

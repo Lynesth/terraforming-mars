@@ -9,7 +9,7 @@ describe('BribedCommittee', function() {
     const player = TestPlayers.BLUE.newPlayer();
     const game = new Game('foobar', [player, player], player);
     card.play(player, game);
-    player.victoryPointsBreakdown.setVictoryPoints('victoryPoints', card.getVictoryPoints());
+    player.victoryPointsBreakdown.setVictoryPoints('victoryPoints', card.getVictoryPoints(player, game));
     expect(player.victoryPointsBreakdown.victoryPoints).to.eq(-2);
     expect(player.getTerraformRating()).to.eq(22);
   });

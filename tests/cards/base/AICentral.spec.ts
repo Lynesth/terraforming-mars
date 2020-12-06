@@ -15,26 +15,28 @@ describe('AICentral', function() {
   });
 
   it('Can\'t play if not enough science tags to play', function() {
-    expect(card.canPlay(player)).is.not.true;
+    expect(card.canPlay(player, game)).is.not.true;
   });
 
   it('Can\'t play if no energy production', function() {
     player.playedCards.push(card, card, card);
-    expect(card.canPlay(player)).is.not.true;
+    expect(card.canPlay(player, game)).is.not.true;
   });
 
   it('Should play', function() {
     player.playedCards.push(card, card, card);
     player.addProduction(Resources.ENERGY);
+    expect(card.canPlay(player, game)).is.true;
 
-    card.play(player);
+    card.play(player, game);
     expect(player.getProduction(Resources.ENERGY)).to.eq(0);
-    player.victoryPointsBreakdown.setVictoryPoints('victoryPoints', card.getVictoryPoints());
+    player.victoryPointsBreakdown.setVictoryPoints('victoryPoints', card.getVictoryPoints(player, game));
     expect(player.victoryPointsBreakdown.victoryPoints).to.eq(1);
   });
 
   it('Should take action', function() {
     card.action(player, game);
+    game.deferredActions.shift()!.execute();
     expect(player.cardsInHand).has.lengthOf(2);
   });
 });

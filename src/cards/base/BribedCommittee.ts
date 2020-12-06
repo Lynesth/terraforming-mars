@@ -1,4 +1,4 @@
-import {IProjectCard} from '../IProjectCard';
+import {ProjectCard} from '../Card';
 import {Tags} from '../Tags';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
@@ -10,7 +10,7 @@ import {REDS_RULING_POLICY_COST} from '../../constants';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
 
-export class BribedCommittee implements IProjectCard {
+export class BribedCommittee extends ProjectCard {
     public cost = 7;
     public tags = [Tags.EARTH];
     public cardType = CardType.EVENT;
@@ -25,15 +25,11 @@ export class BribedCommittee implements IProjectCard {
       return true;
     }
 
-    public play(player: Player, game: Game) {
-      player.increaseTerraformRatingSteps(2, game);
-      return undefined;
-    }
-
-    public getVictoryPoints() {
-      return -2;
-    }
     public metadata: CardMetadata = {
+      play: {
+        tr: {quantity: 2},
+      },
+      vps: -2,
       cardNumber: '112',
       description: 'Raise your TR 2 steps.',
       renderData: CardRenderer.builder((b) => b.tr(2)),

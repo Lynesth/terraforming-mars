@@ -2,6 +2,7 @@ import {expect} from 'chai';
 import {Game} from '../../src/Game';
 import {Player} from '../../src/Player';
 import {ALL_CARD_MANIFESTS} from '../../src/cards/AllCards';
+import {ProjectCard} from '../../src/cards/Card';
 import {TestPlayers} from '../TestingUtils';
 
 describe('CardMetadata', function() {
@@ -16,7 +17,7 @@ describe('CardMetadata', function() {
     ALL_CARD_MANIFESTS.forEach((manifest) => {
       manifest.projectCards.cards.forEach((c) => {
         const card = new c.Factory();
-        if (card.metadata !== undefined && card.getVictoryPoints !== undefined) {
+        if (card instanceof ProjectCard === false && card.metadata !== undefined && card.getVictoryPoints !== undefined) {
           expect(card.metadata.victoryPoints, card.name + ' is missing VP metadata').is.not.undefined;
           const vp = card.getVictoryPoints(player, game);
           if (vp !== 0) {
