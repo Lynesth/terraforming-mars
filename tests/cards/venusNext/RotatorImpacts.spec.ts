@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import {MorningStarInc} from '../../../src/cards/venusNext/MorningStarInc';
 import {RotatorImpacts} from '../../../src/cards/venusNext/RotatorImpacts';
 import {MAX_VENUS_SCALE} from '../../../src/constants';
 import {Game} from '../../../src/Game';
@@ -12,7 +13,8 @@ describe('RotatorImpacts', function() {
   beforeEach(function() {
     card = new RotatorImpacts();
     player = TestPlayers.BLUE.newPlayer();
-    game = new Game('foobar', [player, player], player);
+    const redPlayer = TestPlayers.RED.newPlayer();
+    game = new Game('foobar', [player, redPlayer], player);
   });
 
   it('Can\'t play', function() {
@@ -24,6 +26,15 @@ describe('RotatorImpacts', function() {
     expect(card.canPlay(player, game)).is.true;
     const action = card.play();
     expect(action).is.undefined;
+  });
+
+  it('Works with MSI corporation', function() {
+    const corp = new MorningStarInc();
+    corp.play();
+    player.corporationCard = corp;
+
+    (game as any).venusScaleLevel = 18;
+    expect(card.canPlay(player, game)).is.true;
   });
 
   it('Should act', function() {

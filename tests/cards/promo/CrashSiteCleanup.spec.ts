@@ -1,7 +1,6 @@
 import {expect} from 'chai';
 import {CrashSiteCleanup} from '../../../src/cards/promo/CrashSiteCleanup';
 import {SmallAsteroid} from '../../../src/cards/promo/SmallAsteroid';
-import {Color} from '../../../src/Color';
 import {Game} from '../../../src/Game';
 import {OrOptions} from '../../../src/inputs/OrOptions';
 import {Player} from '../../../src/Player';
@@ -13,7 +12,8 @@ describe('CrashSiteCleanup', function() {
   beforeEach(function() {
     card = new CrashSiteCleanup();
     player = TestPlayers.BLUE.newPlayer();
-    game = new Game('foobar', [player, player], player);
+    const redPlayer = TestPlayers.RED.newPlayer();
+    game = new Game('foobar', [player, redPlayer], player);
   });
 
   it('Can\'t play', function() {
@@ -21,7 +21,7 @@ describe('CrashSiteCleanup', function() {
   });
 
   it('Can play if removed plants from another player this generation', function() {
-    const player2 = new Player('test', Color.RED, false);
+    const player2 = TestPlayers.RED.newPlayer();
     const game = new Game('foobar', [player, player2], player);
     player2.plants = 1;
 

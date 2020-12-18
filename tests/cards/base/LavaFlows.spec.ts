@@ -1,6 +1,5 @@
 import {expect} from 'chai';
 import {LavaFlows} from '../../../src/cards/base/LavaFlows';
-import {Color} from '../../../src/Color';
 import {Game} from '../../../src/Game';
 import {Player} from '../../../src/Player';
 import {SpaceName} from '../../../src/SpaceName';
@@ -14,7 +13,8 @@ describe('LavaFlows', function() {
   beforeEach(function() {
     card = new LavaFlows();
     player = TestPlayers.BLUE.newPlayer();
-    game = new Game('foobar', [player, player], player);
+    const redPlayer = TestPlayers.RED.newPlayer();
+    game = new Game('foobar', [player, redPlayer], player);
     resetBoard(game);
   });
 
@@ -23,7 +23,7 @@ describe('LavaFlows', function() {
     game.addTile(player, SpaceType.LAND, game.getSpace(SpaceName.ARSIA_MONS), {tileType: TileType.LAVA_FLOWS});
     game.addTile(player, SpaceType.LAND, game.getSpace(SpaceName.PAVONIS_MONS), {tileType: TileType.LAVA_FLOWS});
 
-    const anotherPlayer = new Player('test', Color.RED, false);
+    const anotherPlayer = TestPlayers.RED.newPlayer();
     game.getSpace(SpaceName.ASCRAEUS_MONS).player = anotherPlayer; // land claim
     expect(card.canPlay(player, game)).is.not.true;
   });

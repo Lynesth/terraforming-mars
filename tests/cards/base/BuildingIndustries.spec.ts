@@ -6,12 +6,13 @@ import {Resources} from '../../../src/Resources';
 import {TestPlayers} from '../../TestingUtils';
 
 describe('BuildingIndustries', function() {
-  let card : BuildingIndustries; let player : Player; let game: Game;
+  let card: BuildingIndustries; let player: Player; let redPlayer: Player; let game: Game;
 
   beforeEach(function() {
     card = new BuildingIndustries();
     player = TestPlayers.BLUE.newPlayer();
-    game = new Game('foobar', [player, player], player);
+    redPlayer = TestPlayers.RED.newPlayer();
+    game = new Game('foobar', [player, redPlayer], player);
   });
 
   it('Can\'t play', function() {

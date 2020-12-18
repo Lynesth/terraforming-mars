@@ -9,8 +9,10 @@ describe('AcquiredCompany', function() {
   it('Should play', function() {
     const card = new AcquiredCompany();
     const player = TestPlayers.BLUE.newPlayer();
-    const game = new Game('foobar', [player, player], player);
+    const redPlayer = TestPlayers.RED.newPlayer();
+    const game = new Game('foobar', [player, redPlayer], player);
     card.play(player, game);
+
     expect(player.getProduction(Resources.MEGACREDITS)).to.eq(3);
   });
 });

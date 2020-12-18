@@ -20,7 +20,7 @@ export class Asteroid extends ProjectCard {
   public hasRequirements = false;
 
   public canPlay(player: Player, game: Game): boolean {
-    const temperatureMaxed = game.getVenusScaleLevel() === MAX_TEMPERATURE;
+    const temperatureMaxed = game.getTemperature() === MAX_TEMPERATURE;
     if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !temperatureMaxed) {
       return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, false, true);
     }

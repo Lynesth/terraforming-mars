@@ -9,12 +9,13 @@ import {Resources} from '../../../src/Resources';
 import {TestPlayers} from '../../TestingUtils';
 
 describe('Cartel', function() {
-  let card : Cartel; let player : Player; let game: Game;
+  let card: Cartel; let player: Player; let redPlayer: Player; let game: Game;
 
   beforeEach(function() {
     card = new Cartel();
     player = TestPlayers.BLUE.newPlayer();
-    game = new Game('foobar', [player, player], player);
+    redPlayer = TestPlayers.RED.newPlayer();
+    game = new Game('foobar', [player, redPlayer], player);
   });
 
   it('Should play', function() {

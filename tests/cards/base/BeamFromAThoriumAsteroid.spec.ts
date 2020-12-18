@@ -18,7 +18,8 @@ describe('BeamFromAThoriumAsteroid', function() {
   });
 
   it('Should play', function() {
-    const game = new Game('foobar', [player, player], player);
+    const redPlayer = TestPlayers.RED.newPlayer();
+    const game = new Game('foobar', [player, redPlayer], player);
 
     player.playedCards.push(card);
     expect(card.canPlay(player)).is.true;
