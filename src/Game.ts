@@ -1237,7 +1237,7 @@ export class Game implements ISerializable<SerializedGame> {
 
     // BONUS FOR OCEAN TILE AT 0
     if (this.temperature < 0 && this.temperature + steps * 2 >= 0) {
-      this.defer(new PlaceOceanTile(player, this, 'Select space for ocean from temperature increase'));
+      this.defer(new PlaceOceanTile(player, this, 'Select space for ocean from temperature increase'), true);
     }
 
     this.temperature += steps * 2;

@@ -5,9 +5,9 @@ import {Player} from '../../Player';
 import {Game} from '../../Game';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
-import {MAX_TEMPERATURE, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
 
@@ -17,11 +17,13 @@ export class DeepWellHeating implements IProjectCard {
     public name = CardName.DEEP_WELL_HEATING;
     public cardType = CardType.AUTOMATED;
     public hasRequirements = false;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const temperatureMaxed = game.getVenusScaleLevel() === MAX_TEMPERATURE;
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !temperatureMaxed) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, true);
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, temperatureIncrease: 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
       }
 
       return true;

@@ -6,7 +6,7 @@ import {Player} from '../../Player';
 import {Game} from '../../Game';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {REDS_RULING_POLICY_COST, MAX_TEMPERATURE} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {RemoveAnyPlants} from '../../deferredActions/RemoveAnyPlants';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
@@ -17,11 +17,13 @@ export class SmallAsteroid implements IProjectCard {
     public tags = [Tags.SPACE];
     public cardType = CardType.EVENT;
     public hasRequirements = false;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const canRaiseTemperature = game.getTemperature() < MAX_TEMPERATURE;
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && canRaiseTemperature) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, false, true);
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, temperatureIncrease: 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
       }
 
       return true;

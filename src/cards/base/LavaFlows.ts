@@ -24,7 +24,6 @@ export class LavaFlows implements IProjectCard {
     public cardType = CardType.EVENT;
     public adjacencyBonus?: IAdjacencyBonus = undefined;
     public howToAffordReds?: HowToAffordRedsPolicy;
-    public warning?: string;
 
     public static getVolcanicSpaces(player: Player, game: Game): Array<ISpace> {
       if (game.gameOptions.boardName === BoardName.ORIGINAL) {
@@ -39,7 +38,6 @@ export class LavaFlows implements IProjectCard {
     }
 
     public canPlay(player: Player, game: Game): boolean {
-      this.warning = undefined;
       const volcanicSpaces = LavaFlows.getVolcanicSpaces(player, game);
 
       if (volcanicSpaces.length === 0) {
@@ -56,7 +54,6 @@ export class LavaFlows implements IProjectCard {
     }
 
     public play(player: Player, game: Game) {
-      player.howToAffordReds = this.howToAffordReds;
       game.increaseTemperature(player, 2);
       return new SelectSpace('Select either Tharsis Tholus, Ascraeus Mons, Pavonis Mons or Arsia Mons', LavaFlows.getVolcanicSpaces(player, game), (space: ISpace) => {
         game.addTile(player, SpaceType.LAND, space, {tileType: TileType.LAVA_FLOWS});

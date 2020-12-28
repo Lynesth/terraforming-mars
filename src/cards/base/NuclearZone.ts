@@ -7,9 +7,9 @@ import {SelectSpace} from '../../inputs/SelectSpace';
 import {TileType} from '../../TileType';
 import {ISpace} from '../../boards/ISpace';
 import {CardName} from '../../CardName';
-import {MAX_TEMPERATURE, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {IAdjacencyBonus} from '../../ares/IAdjacencyBonus';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
@@ -21,24 +21,29 @@ export class NuclearZone implements IProjectCard {
     public cardType = CardType.AUTOMATED;
     public hasRequirements = false;
     public adjacencyBonus?: IAdjacencyBonus = undefined;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const canPlaceTile = game.board.getAvailableSpacesOnLand(player).length > 0;
-      const remainingTemperatureSteps = (MAX_TEMPERATURE - game.getTemperature()) / 2;
-      const stepsRaised = Math.min(remainingTemperatureSteps, 2);
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * stepsRaised) && canPlaceTile;
+      const tileSpaces = game.board.getAvailableSpacesOnLand(player);
+      if (tileSpaces.length === 0) {
+        return false;
       }
 
-      return canPlaceTile;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, temperatureIncrease: 2, nonOceanToPlace: TileType.NUCLEAR_ZONE, nonOceanAvailableSpaces: tileSpaces});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {
+      game.increaseTemperature(player, 2);
       return new SelectSpace('Select space for special tile', game.board.getAvailableSpacesOnLand(player), (foundSpace: ISpace) => {
         game.addTile(player, foundSpace.spaceType, foundSpace, {tileType: TileType.NUCLEAR_ZONE});
         foundSpace.adjacency = this.adjacencyBonus;
-        return game.increaseTemperature(player, 2);
+        return undefined;
       });
     }
 

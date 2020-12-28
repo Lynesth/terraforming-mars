@@ -18,10 +18,8 @@ export class BigAsteroid implements IProjectCard {
   public name = CardName.BIG_ASTEROID;
   public hasRequirements = false;
   public howToAffordReds?: HowToAffordRedsPolicy;
-  public warning?: string;
 
   public canPlay(player: Player, game: Game): boolean {
-    this.warning = undefined;
     if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
       const actionDetails = new ActionDetails({card: this, temperatureIncrease: 2});
       this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, true);
@@ -32,7 +30,6 @@ export class BigAsteroid implements IProjectCard {
   }
 
   public play(player: Player, game: Game) {
-    player.howToAffordReds = this.howToAffordReds;
     game.increaseTemperature(player, 2);
     game.defer(new RemoveAnyPlants(player, game, 4));
     player.titanium += 4;
