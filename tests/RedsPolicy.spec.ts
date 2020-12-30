@@ -1,7 +1,7 @@
 import {expect} from 'chai';
-import {Color} from '../src/Color';
 import {Player} from '../src/Player';
 import {Game, GameOptions} from '../src/Game';
+import {TestPlayers} from './TestingUtils';
 import {BoardName} from '../src/boards/BoardName';
 import {IceAsteroid} from '../src/cards/base/IceAsteroid';
 import {LavaFlows} from '../src/cards/base/LavaFlows';
@@ -21,7 +21,7 @@ describe('RedsPolicy', function() {
   let protectedValley: ActionDetails;
 
   beforeEach(function() {
-    player = new Player('test', Color.BLUE, false);
+    player = TestPlayers.BLUE.newPlayer();
     const gameOptions = setCustomGameOptions() as GameOptions;
     game = Game.newInstance('foobar', [player], player, gameOptions);
     resetBoard(game);
