@@ -25,7 +25,7 @@ export class StripMine implements IProjectCard {
 
       if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
         const actionDetails = new ActionDetails({card: this, oxygenIncrease: 2});
-        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, true);
         return this.howToAffordReds.canAfford;
       }
 

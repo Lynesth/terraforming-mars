@@ -25,8 +25,8 @@ export class ProtectedValley implements IProjectCard {
 
     public canPlay(player: Player, game: Game): boolean {
       if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        const actionDetails = new ActionDetails({card: this, oxygenIncrease: 1, nonOceanToPlace: TileType.GREENERY, nonOceanAvailableSpaces: game.board.getAvailableSpacesForOcean(player)});
-        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        const actionDetails = new ActionDetails({card: this, oxygenIncrease: 1, nonOceanToPlace: TileType.GREENERY, nonOceanAvailableSpaces: game.board.getAvailableSpacesForOcean(player), megaCreditsProduction: 2});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, true);
         return this.howToAffordReds.canAfford;
       }
 

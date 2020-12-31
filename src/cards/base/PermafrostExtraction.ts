@@ -2,12 +2,11 @@ import {CardType} from '../CardType';
 import {IProjectCard} from '../IProjectCard';
 import {Player} from '../../Player';
 import {Game} from '../../Game';
-import {SelectSpace} from '../../inputs/SelectSpace';
-import {ISpace} from '../../boards/ISpace';
-import {MAX_OCEAN_TILES, REDS_RULING_POLICY_COST} from '../../constants';
 import {CardName} from '../../CardName';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
+import {PlaceOceanTile} from '../../deferredActions/PlaceOceanTile';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -18,27 +17,25 @@ export class PermafrostExtraction implements IProjectCard {
     public tags = [];
     public cost = 8;
     public name = CardName.PERMAFROST_EXTRACTION;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const meetsTemperatureRequirements = game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, -8);
-      const oceansMaxed = game.board.getOceansOnBoard() === MAX_OCEAN_TILES;
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !oceansMaxed) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST) && meetsTemperatureRequirements;
+      if (game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, -8) === false) {
+        return false;
       }
 
-      return meetsTemperatureRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, oceansToPlace: 1, oceansAvailableSpaces: game.board.getAvailableSpacesForOcean(player)});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {
-      if (game.board.getOceansOnBoard() === MAX_OCEAN_TILES) {
-        return undefined;
-      }
-
-      return new SelectSpace('Select space for ocean tile', game.board.getAvailableSpacesForOcean(player), (space: ISpace) => {
-        game.addOceanTile(player, space.id);
-        return undefined;
-      });
+      game.defer(new PlaceOceanTile(player, game));
+      return undefined;
     }
 
     public metadata: CardMetadata = {

@@ -3,13 +3,11 @@ import {Tags} from '../Tags';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
 import {Game} from '../../Game';
-import {ISpace} from '../../boards/ISpace';
-import {SelectSpace} from '../../inputs/SelectSpace';
-import {SpaceType} from '../../SpaceType';
 import {CardName} from '../../CardName';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {MAX_OCEAN_TILES, REDS_RULING_POLICY_COST} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
+import {PlaceOceanTile} from '../../deferredActions/PlaceOceanTile';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -20,23 +18,24 @@ export class ArtificialLake implements IProjectCard {
   public tags = [Tags.BUILDING];
   public name = CardName.ARTIFICIAL_LAKE;
   public cardType = CardType.AUTOMATED;
-  public canPlay(player: Player, game: Game): boolean {
-    const meetsTemperatureRequirements = game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, -6);
-    const oceansMaxed = game.board.getOceansOnBoard() === MAX_OCEAN_TILES;
+  public howToAffordReds?: HowToAffordRedsPolicy;
 
-    if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !oceansMaxed) {
-      return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, true) && meetsTemperatureRequirements;
+  public canPlay(player: Player, game: Game): boolean {
+    if (game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, -6) === false) {
+      return false;
     }
 
-    return meetsTemperatureRequirements;
+    if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+      const actionDetails = new ActionDetails({card: this, oceansToPlace: 1, oceansAvailableSpaces: game.board.getAvailableSpacesOnLand(player)});
+      this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, true);
+      return this.howToAffordReds.canAfford;
+    }
+
+    return true;
   }
   public play(player: Player, game: Game) {
-    if (game.board.getOceansOnBoard() >= MAX_OCEAN_TILES) return undefined;
-
-    return new SelectSpace('Select a land space to place an ocean', game.board.getAvailableSpacesOnLand(player), (foundSpace: ISpace) => {
-      game.addOceanTile(player, foundSpace.id, SpaceType.LAND);
-      return undefined;
-    });
+    game.defer(new PlaceOceanTile(player, game));
+    return undefined;
   }
   public getVictoryPoints() {
     return 1;

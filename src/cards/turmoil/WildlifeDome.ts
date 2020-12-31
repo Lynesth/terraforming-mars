@@ -33,7 +33,7 @@ export class WildlifeDome implements IProjectCard {
 
       if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
         const actionDetails = new ActionDetails({card: this, oxygenIncrease: 1, nonOceanToPlace: TileType.GREENERY, nonOceanAvailableSpaces: availableSpaces});
-        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, true);
         return this.howToAffordReds.canAfford;
       }
 

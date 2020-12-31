@@ -22,7 +22,7 @@ export class SmallAsteroid implements IProjectCard {
     public canPlay(player: Player, game: Game): boolean {
       if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
         const actionDetails = new ActionDetails({card: this, temperatureIncrease: 1});
-        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, true);
         return this.howToAffordReds.canAfford;
       }
 

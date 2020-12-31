@@ -3,9 +3,9 @@ import {CardType} from '../CardType';
 import {Player} from '../../Player';
 import {Game} from '../../Game';
 import {CardName} from '../../CardName';
-import {MAX_OCEAN_TILES, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {PlaceOceanTile} from '../../deferredActions/PlaceOceanTile';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
@@ -17,16 +17,20 @@ export class LakeMarineris implements IProjectCard {
     public tags = [];
     public name = CardName.LAKE_MARINERIS;
     public cardType = CardType.AUTOMATED;
-    public canPlay(player: Player, game: Game): boolean {
-      const meetsTemperatureRequirements = game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, 0);
-      const remainingOceans = MAX_OCEAN_TILES - game.board.getOceansOnBoard();
-      const oceansPlaced = Math.min(remainingOceans, 2);
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * oceansPlaced) && meetsTemperatureRequirements;
+    public canPlay(player: Player, game: Game): boolean {
+      if (game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, 0) === false) {
+        return false;
       }
 
-      return meetsTemperatureRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, oceansToPlace: 2, oceansAvailableSpaces: game.board.getAvailableSpacesForOcean(player)});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {

@@ -3,9 +3,9 @@ import {IProjectCard} from '../IProjectCard';
 import {Player} from '../../Player';
 import {Game} from '../../Game';
 import {CardName} from '../../CardName';
-import {MAX_OCEAN_TILES, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {PlaceOceanTile} from '../../deferredActions/PlaceOceanTile';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
@@ -17,15 +17,20 @@ export class IceCapMelting implements IProjectCard {
     public cardType = CardType.EVENT;
     public tags = [];
     public name = CardName.ICE_CAP_MELTING;
-    public canPlay(player: Player, game: Game): boolean {
-      const meetsTemperatureRequirements = game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, 2);
-      const oceansMaxed = game.board.getOceansOnBoard() === MAX_OCEAN_TILES;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !oceansMaxed) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST) && meetsTemperatureRequirements;
+    public canPlay(player: Player, game: Game): boolean {
+      if (game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, 2) === false) {
+        return false;
       }
 
-      return meetsTemperatureRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, oceansToPlace: 1, oceansAvailableSpaces: game.board.getAvailableSpacesForOcean(player)});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
     public play(player: Player, game: Game) {
       game.defer(new PlaceOceanTile(player, game));

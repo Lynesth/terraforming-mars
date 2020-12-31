@@ -22,7 +22,7 @@ export class NitrogenRichAsteroid implements IProjectCard {
     public canPlay(player: Player, game: Game): boolean {
       if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
         const actionDetails = new ActionDetails({card: this, TRIncrease: 2, temperatureIncrease: 1});
-        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, true);
         return this.howToAffordReds.canAfford;
       }
 
