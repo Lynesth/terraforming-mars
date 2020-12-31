@@ -7,7 +7,7 @@ import {Game} from '../../Game';
 import {PartyName} from '../../turmoil/parties/PartyName';
 import {Resources} from '../../Resources';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
-import {REDS_RULING_POLICY_COST} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -17,17 +17,20 @@ export class PROffice implements IProjectCard {
     public tags = [Tags.EARTH];
     public name = CardName.PR_OFFICE;
     public cardType = CardType.AUTOMATED;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      if (game.turmoil !== undefined) {
-        const meetsPartyRequirements = game.turmoil.canPlay(player, PartyName.UNITY);
-        if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-          return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST) && meetsPartyRequirements;
-        }
-
-        return meetsPartyRequirements;
+      if (game.turmoil === undefined || game.turmoil.canPlay(player, PartyName.UNITY) === false) {
+        return false;
       }
-      return false;
+
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, TRIncrease: 1, bonusMegaCredits: player.getTagCount(Tags.EARTH) + 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {

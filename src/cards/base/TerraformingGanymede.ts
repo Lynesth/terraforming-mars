@@ -6,7 +6,7 @@ import {Game} from '../../Game';
 import {CardName} from '../../CardName';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {REDS_RULING_POLICY_COST} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {LogHelper} from '../../LogHelper';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
@@ -17,12 +17,13 @@ export class TerraformingGanymede implements IProjectCard {
     public name = CardName.TERRAFORMING_GANYMEDE;
     public cardType = CardType.AUTOMATED;
     public hasRequirements = false;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const steps = 1 + player.getTagCount(Tags.JOVIAN);
-
       if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * steps, game, false, true);
+        const actionDetails = new ActionDetails({card: this, TRIncrease: player.getTagCount(Tags.JOVIAN) + 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, true);
+        return this.howToAffordReds.canAfford;
       }
 
       return true;

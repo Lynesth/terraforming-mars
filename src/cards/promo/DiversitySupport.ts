@@ -3,6 +3,9 @@ import {CardType} from './../CardType';
 import {Player} from '../../Player';
 import {Game} from '../../Game';
 import {CardName} from '../../CardName';
+import {PartyHooks} from '../../turmoil/parties/PartyHooks';
+import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {Resources} from '../../Resources';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
@@ -13,10 +16,20 @@ export class DiversitySupport implements IProjectCard {
     public tags = [];
     public name = CardName.DIVERSITY_SUPPORT;
     public cardType = CardType.EVENT;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
-    public canPlay(player: Player) {
-      const count = this.getStandardResourceCount(player) + this.getNonStandardResourceCount(player);
-      return count >= 9;
+    public canPlay(player: Player, game: Game) {
+      if (this.getStandardResourceCount(player) + this.getNonStandardResourceCount(player) < 9) {
+        return false;
+      }
+
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, TRIncrease: 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {

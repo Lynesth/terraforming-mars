@@ -8,7 +8,7 @@ import {Game} from '../../Game';
 import {IResourceCard} from '../ICard';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {REDS_RULING_POLICY_COST} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {AddResourcesToCard} from '../../deferredActions/AddResourcesToCard';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
@@ -24,15 +24,20 @@ export class JovianLanterns implements IProjectCard, IResourceCard {
     public cardType = CardType.ACTIVE;
     public resourceType = ResourceType.FLOATER;
     public resourceCount: number = 0;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const meetsTagRequirements = player.getTagCount(Tags.JOVIAN) >= 1;
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST) && meetsTagRequirements;
+      if (player.getTagCount(Tags.JOVIAN) < 1) {
+        return false;
       }
 
-      return meetsTagRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, TRIncrease: 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public canAct(player: Player): boolean {

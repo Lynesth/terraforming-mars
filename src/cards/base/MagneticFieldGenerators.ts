@@ -7,7 +7,7 @@ import {CardName} from '../../CardName';
 import {Game} from '../../Game';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {REDS_RULING_POLICY_COST} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
 
@@ -17,15 +17,20 @@ export class MagneticFieldGenerators implements IProjectCard {
     public name = CardName.MAGNETIC_FIELD_GENERATORS;
     public cardType = CardType.AUTOMATED;
     public hasRequirements = false;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const meetsEnergyRequirements = player.getProduction(Resources.ENERGY) >= 4;
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * 3, game, true) && meetsEnergyRequirements;
+      if (player.getProduction(Resources.ENERGY) < 4) {
+        return false;
       }
 
-      return meetsEnergyRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, TRIncrease: 3});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, true);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {
