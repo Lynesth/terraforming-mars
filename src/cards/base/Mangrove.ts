@@ -7,9 +7,10 @@ import {SelectSpace} from '../../inputs/SelectSpace';
 import {SpaceType} from '../../SpaceType';
 import {ISpace} from '../../boards/ISpace';
 import {CardName} from '../../CardName';
-import {MAX_OXYGEN_LEVEL, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
+import {TileType} from '../../TileType';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -21,16 +22,20 @@ export class Mangrove implements IProjectCard {
     public tags = [Tags.PLANT];
     public name = CardName.MANGROVE;
     public cardType = CardType.AUTOMATED;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const meetsTemperatureRequirements = game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, 4);
-      const oxygenMaxed = game.getOxygenLevel() === MAX_OXYGEN_LEVEL;
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !oxygenMaxed) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, false, false, false, true) && meetsTemperatureRequirements;
+      if (game.checkMinRequirements(player, GlobalParameter.TEMPERATURE, 4) === false) {
+        return false;
       }
 
-      return meetsTemperatureRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, oxygenIncrease: 1, nonOceanToPlace: TileType.GREENERY, nonOceanAvailableSpaces: game.board.getAvailableSpacesForOcean(player)});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {
@@ -38,6 +43,7 @@ export class Mangrove implements IProjectCard {
         return game.addGreenery(player, foundSpace.id, SpaceType.OCEAN);
       });
     }
+
     public getVictoryPoints() {
       return 1;
     }

@@ -8,9 +8,10 @@ import {SelectSpace} from '../../inputs/SelectSpace';
 import {ISpace} from '../../boards/ISpace';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
-import {MAX_OXYGEN_LEVEL, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
+import {TileType} from '../../TileType';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
 
@@ -20,12 +21,13 @@ export class ProtectedValley implements IProjectCard {
     public tags = [Tags.PLANT, Tags.BUILDING];
     public name = CardName.PROTECTED_VALLEY;
     public hasRequirements = false;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const oxygenMaxed = game.getOxygenLevel() === MAX_OXYGEN_LEVEL;
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !oxygenMaxed) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, true, false, false, true);
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, oxygenIncrease: 1, nonOceanToPlace: TileType.GREENERY, nonOceanAvailableSpaces: game.board.getAvailableSpacesForOcean(player)});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
       }
 
       return true;

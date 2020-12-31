@@ -4,11 +4,12 @@ import {CardName} from '../../CardName';
 import {CardType} from '../CardType';
 import {Player} from '../../Player';
 import {Game} from '../../Game';
-import {PartyName} from '../../turmoil/parties/PartyName';
 import {SelectSpace} from '../../inputs/SelectSpace';
 import {ISpace} from '../../boards/ISpace';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
-import {REDS_RULING_POLICY_COST, MAX_OXYGEN_LEVEL} from '../../constants';
+import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
+import {TileType} from '../../TileType';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -18,20 +19,25 @@ export class WildlifeDome implements IProjectCard {
     public tags = [Tags.ANIMAL, Tags.PLANT, Tags.BUILDING];
     public name = CardName.WILDLIFE_DOME;
     public cardType = CardType.AUTOMATED;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      if (game.turmoil !== undefined) {
-        const canPlaceTile = game.board.getAvailableSpacesForGreenery(player).length > 0;
-        const meetsPartyRequirements = game.turmoil.canPlay(player, PartyName.GREENS);
-        const oxygenMaxed = game.getOxygenLevel() === MAX_OXYGEN_LEVEL;
-
-        if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !oxygenMaxed) {
-          return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, true, false, false, true) && meetsPartyRequirements && canPlaceTile;
-        }
-
-        return meetsPartyRequirements && canPlaceTile;
+      if (game.turmoil === undefined || game.turmoil.canPlay(player, PartyName.GREENS) === false) {
+        return false;
       }
-      return false;
+
+      const availableSpaces = game.board.getAvailableSpacesForGreenery(player);
+      if (availableSpaces.length === 0) {
+        return false;
+      }
+
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, oxygenIncrease: 1, nonOceanToPlace: TileType.GREENERY, nonOceanAvailableSpaces: availableSpaces});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {

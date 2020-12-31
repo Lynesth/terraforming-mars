@@ -6,9 +6,10 @@ import {Game} from '../../Game';
 import {SelectSpace} from '../../inputs/SelectSpace';
 import {ISpace} from '../../boards/ISpace';
 import {CardName} from '../../CardName';
-import {MAX_OXYGEN_LEVEL, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
+import {TileType} from '../../TileType';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -18,17 +19,21 @@ export class Plantation implements IProjectCard {
     public cardType = CardType.AUTOMATED;
     public tags = [Tags.PLANT];
     public name = CardName.PLANTATION;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const meetsTagRequirements = player.getTagCount(Tags.SCIENCE) >= 2;
-      const canPlaceTile = game.board.getAvailableSpacesOnLand(player).length > 0;
-      const oxygenMaxed = game.getOxygenLevel() === MAX_OXYGEN_LEVEL;
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !oxygenMaxed) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, false, false, false, true) && meetsTagRequirements && canPlaceTile;
+      const availableSpaces = game.board.getAvailableSpacesForGreenery(player);
+      if (player.getTagCount(Tags.SCIENCE) < 2 || availableSpaces.length === 0) {
+        return false;
       }
 
-      return meetsTagRequirements && canPlaceTile;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, oxygenIncrease: 1, nonOceanToPlace: TileType.GREENERY, nonOceanAvailableSpaces: availableSpaces});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {
