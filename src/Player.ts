@@ -1945,9 +1945,11 @@ export class Player implements ISerializable<SerializedPlayer> {
   public setWaitingFor(input: PlayerInput, cb: () => void): void {
     if (input instanceof SelectSpace && this.howToAffordReds !== undefined && this.howToAffordReds.spaces !== undefined) {
       const availableSpaces = Array.from(this.howToAffordReds.spaces.keys());
+      if (availableSpaces.length !== input.availableSpaces.length) {
+        input.title += ' (Adjusted for Reds policy)';
+      }
       // Check that it's a subset of defaults spaces
       if (availableSpaces.every((space) => input.availableSpaces.includes(space))) {
-        input.title += ' (Adjusted for Reds policy)';
         input.availableSpaces = availableSpaces;
       } else {
         // This is not supposed to happen let's simply reset it to prevent game breaking errors

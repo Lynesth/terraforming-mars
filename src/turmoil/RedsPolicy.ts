@@ -2,6 +2,7 @@ import * as constants from '../constants';
 import {Board} from '../boards/Board';
 import {BoardName} from '../boards/BoardName';
 import {CardName} from '../CardName';
+import {CardType} from '../cards/CardType';
 import {Game} from '../Game';
 import {IProjectCard} from '../cards/IProjectCard';
 import {ISpace} from '../boards/ISpace';
@@ -199,7 +200,7 @@ export class RedsPolicy {
           bonusMCFromPlay += 1;
         }
       }
-      if (action.card.tags.some((tag) => tag === Tags.EVENT)) {
+      if (action.card.cardType === CardType.EVENT) {
         if (isInterplanetary) {
           bonusMCFromPlay += 2;
         }
@@ -234,10 +235,9 @@ export class RedsPolicy {
       bonusMCFromPlay += action.megaCreditsProduction;
     }
 
-
+    const spendableMegacredits = player.spendableMegacredits();
     const totalToPay = redTaxes + action.cost - bonusMCFromPlay;
-    let missingMC = totalToPay - player.spendableMegacredits();
-    const mustSpendAtMost = player.spendableMegacredits() - (redTaxes - bonusMCFromPlay);
+    let missingMC = totalToPay - spendableMegacredits;
 
     if (missingMC <= 0) {
       // Player has enough MC to cover for everything
@@ -260,7 +260,17 @@ export class RedsPolicy {
       // If player is able to pay using other resources but must not spend more than |mustSpendAtMost| MC on the action/card itself
       if (missingMC <= 0) {
         howToAffordRedsPolicy.canAfford = true;
-        howToAffordRedsPolicy.mustSpendAtMost = mustSpendAtMost;
+        howToAffordRedsPolicy.mustSpendAtMost = spendableMegacredits - Math.min(0, redTaxes - bonusMCFromPlay);
+      } else {
+        howToAffordRedsPolicy.mustSpendAtMost = Math.min(action.cost, spendableMegacredits - (totalToPay - spendableMegacredits - missingMC));
+      }
+
+      if (action.card !== undefined) {
+        if (action.card.warning !== undefined) {
+          action.card.warning += ' Payment options are restricted due to Reds policy.';
+        } else {
+          action.card.warning = 'Payment options are restricted due to Reds policy.';
+        }
       }
     }
 
@@ -293,9 +303,9 @@ export class RedsPolicy {
       if (spacesTree.size > 0) {
         if (action.card !== undefined) {
           if (action.card.warning !== undefined) {
-            action.card.warning += ' Tile placement will be limited due to Reds policy.';
+            action.card.warning += ' Tile placement might be limited due to Reds policy.';
           } else {
-            action.card.warning = 'Tile placement will be limited due to Reds policy.';
+            action.card.warning = 'Tile placement might be limited due to Reds policy.';
           }
         }
 
