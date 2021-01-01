@@ -9,7 +9,7 @@ import {CardName} from '../../CardName';
 import {Game} from '../../Game';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {REDS_RULING_POLICY_COST, MAX_VENUS_SCALE} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
 
@@ -19,11 +19,13 @@ export class AirScrappingExpedition implements IProjectCard {
   public name = CardName.AIR_SCRAPPING_EXPEDITION;
   public cardType = CardType.EVENT;
   public hasRequirements = false;
+  public howToAffordReds?: HowToAffordRedsPolicy;
 
   public canPlay(player: Player, game: Game): boolean {
-    const venusMaxed = game.getVenusScaleLevel() === MAX_VENUS_SCALE;
-    if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !venusMaxed) {
-      return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, false, false, true);
+    if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+      const actionDetails = new ActionDetails({card: this, venusIncrease: 1});
+      this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, false, true);
+      return this.howToAffordReds.canAfford;
     }
 
     return true;

@@ -98,7 +98,7 @@ export class RedsPolicy {
     action.venusIncrease = Math.min(action.venusIncrease, (constants.MAX_VENUS_SCALE - game.getVenusScaleLevel()) / 2);
     action.oceansToPlace = Math.min(action.oceansToPlace, constants.MAX_OCEAN_TILES - game.board.getOceansOnBoard());
 
-    const totalTRGain = action.TRIncrease + action.oxygenIncrease + action.temperatureIncrease + action.oceansToPlace;
+    const totalTRGain = action.TRIncrease + action.oxygenIncrease + action.temperatureIncrease + action.venusIncrease + action.oceansToPlace;
 
     // This is how much the player will have to pay Reds
     const redTaxes = totalTRGain * constants.REDS_RULING_POLICY_COST;
@@ -250,11 +250,11 @@ export class RedsPolicy {
       if (canUseTitanium) {
         missingMC -= Math.min(player.titanium, Math.ceil(missingMC / player.getTitaniumValue(game))) * player.getTitaniumValue(game);
       }
-      if (canUseMicrobes) {
-        missingMC -= Math.min(player.getMicrobesCanSpend(), Math.ceil(missingMC / 2)) * 2;
-      }
       if (canUseFloaters) {
         missingMC -= Math.min(player.getFloatersCanSpend(), Math.ceil(missingMC / 3)) * 3;
+      }
+      if (canUseMicrobes) {
+        missingMC -= Math.min(player.getMicrobesCanSpend(), Math.ceil(missingMC / 2)) * 2;
       }
 
       // If player is able to pay using other resources but must not spend more than |mustSpendAtMost| MC on the action/card itself

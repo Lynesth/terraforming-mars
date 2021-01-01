@@ -6,7 +6,7 @@ import {Game} from '../../Game';
 import {CardName} from '../../CardName';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {REDS_RULING_POLICY_COST} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -17,14 +17,20 @@ export class NeutralizerFactory implements IProjectCard {
     public tags = [Tags.VENUS];
     public name = CardName.NEUTRALIZER_FACTORY;
     public cardType = CardType.AUTOMATED;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const venusRequirementMet = game.checkMinRequirements(player, GlobalParameter.VENUS, 10);
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, false, false, true) && venusRequirementMet;
+      if (game.checkMinRequirements(player, GlobalParameter.VENUS, 10) === false) {
+        return false;
       }
 
-      return venusRequirementMet;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, venusIncrease: 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, false, true);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {

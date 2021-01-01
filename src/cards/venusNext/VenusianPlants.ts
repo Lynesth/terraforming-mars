@@ -8,9 +8,9 @@ import {Game} from '../../Game';
 import {ICard} from '../ICard';
 import {CardName} from '../../CardName';
 import {LogHelper} from '../../LogHelper';
-import {MAX_VENUS_SCALE, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -21,16 +21,20 @@ export class VenusianPlants implements IProjectCard {
     public tags = [Tags.VENUS, Tags.PLANT];
     public name = CardName.VENUSIAN_PLANTS;
     public cardType = CardType.AUTOMATED;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const meetsVenusRequirements = game.checkMinRequirements(player, GlobalParameter.VENUS, 16);
-      const venusMaxed = game.getVenusScaleLevel() === MAX_VENUS_SCALE;
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS) && !venusMaxed) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST, game, false, false, true, true) && meetsVenusRequirements;
+      if (game.checkMinRequirements(player, GlobalParameter.VENUS, 16) === false) {
+        return false;
       }
 
-      return meetsVenusRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, venusIncrease: 1});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, false, true, true);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {

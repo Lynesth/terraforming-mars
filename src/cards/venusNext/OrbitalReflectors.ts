@@ -5,9 +5,9 @@ import {Player} from '../../Player';
 import {Game} from '../../Game';
 import {Resources} from '../../Resources';
 import {CardName} from '../../CardName';
-import {MAX_VENUS_SCALE, REDS_RULING_POLICY_COST} from '../../constants';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRenderer} from '../render/CardRenderer';
 
@@ -17,13 +17,13 @@ export class OrbitalReflectors implements IProjectCard {
     public name = CardName.ORBITAL_REFLECTORS;
     public cardType = CardType.AUTOMATED;
     public hasRequirements = false;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const remainingVenusSteps = (MAX_VENUS_SCALE - game.getVenusScaleLevel()) / 2;
-      const stepsRaised = Math.min(remainingVenusSteps, 2);
-
       if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * stepsRaised, game, false, true, true);
+        const actionDetails = new ActionDetails({card: this, venusIncrease: 2});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, true, true);
+        return this.howToAffordReds.canAfford;
       }
 
       return true;

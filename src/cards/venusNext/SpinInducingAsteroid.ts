@@ -6,7 +6,7 @@ import {Game} from '../../Game';
 import {CardName} from '../../CardName';
 import {PartyHooks} from '../../turmoil/parties/PartyHooks';
 import {PartyName} from '../../turmoil/parties/PartyName';
-import {REDS_RULING_POLICY_COST} from '../../constants';
+import {RedsPolicy, HowToAffordRedsPolicy, ActionDetails} from '../../turmoil/RedsPolicy';
 import {CardMetadata} from '../CardMetadata';
 import {CardRequirements} from '../CardRequirements';
 import {CardRenderer} from '../render/CardRenderer';
@@ -17,15 +17,20 @@ export class SpinInducingAsteroid implements IProjectCard {
     public tags = [Tags.SPACE];
     public name = CardName.SPIN_INDUCING_ASTEROID;
     public cardType = CardType.EVENT;
+    public howToAffordReds?: HowToAffordRedsPolicy;
 
     public canPlay(player: Player, game: Game): boolean {
-      const meetsVenusRequirements = game.checkMaxRequirements(player, GlobalParameter.VENUS, 10);
-
-      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
-        return player.canAfford(player.getCardCost(game, this) + REDS_RULING_POLICY_COST * 2, game, false, true) && meetsVenusRequirements;
+      if (game.checkMaxRequirements(player, GlobalParameter.VENUS, 10) === false) {
+        return false;
       }
 
-      return meetsVenusRequirements;
+      if (PartyHooks.shouldApplyPolicy(game, PartyName.REDS)) {
+        const actionDetails = new ActionDetails({card: this, venusIncrease: 2});
+        this.howToAffordReds = RedsPolicy.canAffordRedsPolicy(player, game, actionDetails, false, true);
+        return this.howToAffordReds.canAfford;
+      }
+
+      return true;
     }
 
     public play(player: Player, game: Game) {
